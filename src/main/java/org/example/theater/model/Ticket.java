@@ -20,11 +20,13 @@ public class Ticket {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime expireDate;
 
-    @Enumerated(EnumType.STRING)
-    private ReservationType type = ReservationType.PENDING;
+    @ManyToOne
+    @JoinColumn(name = "reservation_type_id")
+    private ReservationType type;
 
-    @Enumerated(EnumType.STRING)
-    private TicketType ticketType = TicketType.NORMAL;
+    @ManyToOne
+    @JoinColumn(name = "ticket_type_id")
+    private TicketType ticketType;
 
     private Long place;
 

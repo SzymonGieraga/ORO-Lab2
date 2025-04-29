@@ -1,17 +1,45 @@
 package org.example.theater.model;
 
-public enum TicketType {
-    NORMAL(1.0),
-    REDUCED(0.9),
-    STUDENT(0.7);
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-    private final double multiplier;
+@Entity
+@Table(name = "ticket_type")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TicketType {
+    public static final String NORMAL = "NORMAL";
+    public static final String REDUCED = "REDUCED";
+    public static final String STUDENT = "STUDENT";
 
-    TicketType(double multiplier){
-        this.multiplier = multiplier;
+    @Id
+    private Long id;
+
+    private String name;
+
+    @Getter
+    private double multiplier;
+
+    public static TicketType getNormalType() {
+        return new TicketType(1L, NORMAL, 1.0);
     }
 
-    public double getMultiplier() {
-        return multiplier;
+    public static TicketType getReducedType() {
+        return new TicketType(2L, REDUCED, 0.9);
+    }
+
+    public static TicketType getStudentType() {
+        return new TicketType(3L, STUDENT, 0.7);
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

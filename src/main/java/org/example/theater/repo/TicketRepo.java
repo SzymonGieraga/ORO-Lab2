@@ -22,11 +22,12 @@ public interface TicketRepo extends JpaRepository<Ticket, Long> {
     @Query("SELECT t.show FROM Ticket t WHERE t.client.login = :clientLogin")
     Page<Show> findShowsByClientLogin(@Param("clientLogin") String clientLogin, Pageable pageable);
 
-    @Query("SELECT COUNT(t) FROM Ticket t WHERE t.show.date BETWEEN :startDate AND :endDate AND t.client.id = :clientId AND t.type = :accepted")
+    @Query("SELECT COUNT(t) FROM Ticket t WHERE t.show.date BETWEEN :startDate AND :endDate " +
+            "AND t.client.id = :clientId AND t.type.name = :accepted")
     int countTicketsByClientDateBetween(@Param("startDate") LocalDateTime startDate,
                                         @Param("endDate") LocalDateTime endDate,
                                         @Param("clientId") Long clientId,
-                                        @Param("accepted") ReservationType accepted);
+                                        @Param("accepted") String accepted);
 
     default int countTicketsByClientDateBetween(LocalDateTime startDate, LocalDateTime endDate, Long clientId) {
         return countTicketsByClientDateBetween(startDate, endDate, clientId, ReservationType.ACCEPTED);
@@ -34,11 +35,11 @@ public interface TicketRepo extends JpaRepository<Ticket, Long> {
 
     @Query("SELECT COUNT(t) FROM Ticket t WHERE t.show.hall.number = :hallNumber " +
             "AND t.show.date = :date " +
-            "AND (t.type = :pending OR t.type = :accepted)")
+            "AND (t.type.name = :pending OR t.type.name = :accepted)")
     int countOccupiedPlacesByHallNumberDate(@Param("hallNumber") int hallNumber,
                                             @Param("date") LocalDateTime date,
-                                            @Param("pending") ReservationType pending,
-                                            @Param("accepted") ReservationType accepted);
+                                            @Param("pending") String pending,
+                                            @Param("accepted") String accepted);
 
     default int countOccupiedPlacesByHallNumberDate(int hallNumber, LocalDateTime date) {
         return countOccupiedPlacesByHallNumberDate(hallNumber, date, ReservationType.PENDING, ReservationType.ACCEPTED);

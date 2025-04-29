@@ -4,14 +4,13 @@ import org.example.theater.model.*;
 import org.example.theater.repo.*;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
-
 
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
@@ -35,6 +34,44 @@ class Oro2ApplicationTests {
     @Autowired
     private ClientRepo clientRepo;
 
+    @Autowired
+    private ReservationTypeRepo reservationTypeRepo;
+
+    @Autowired
+    private TicketTypeRepo ticketTypeRepo;
+
+    private ReservationType pendingType;
+    private ReservationType acceptedType;
+    private ReservationType expiredType;
+
+    private TicketType normalType;
+    private TicketType reducedType;
+    private TicketType studentType;
+
+    @BeforeEach
+    void setup() {
+
+        if (reservationTypeRepo.count() == 0) {
+            reservationTypeRepo.save(ReservationType.getPendingType());
+            reservationTypeRepo.save(ReservationType.getAcceptedType());
+            reservationTypeRepo.save(ReservationType.getExpiredType());
+        }
+
+        if (ticketTypeRepo.count() == 0) {
+            ticketTypeRepo.save(TicketType.getNormalType());
+            ticketTypeRepo.save(TicketType.getReducedType());
+            ticketTypeRepo.save(TicketType.getStudentType());
+        }
+
+        pendingType = reservationTypeRepo.findByName(ReservationType.PENDING);
+        acceptedType = reservationTypeRepo.findByName(ReservationType.ACCEPTED);
+        expiredType = reservationTypeRepo.findByName(ReservationType.EXPIRED);
+
+        normalType = ticketTypeRepo.findByName(TicketType.NORMAL);
+        reducedType = ticketTypeRepo.findByName(TicketType.REDUCED);
+        studentType = ticketTypeRepo.findByName(TicketType.STUDENT);
+    }
+
     @Test
     @Transactional
     void contextLoads() {
@@ -55,10 +92,16 @@ class Oro2ApplicationTests {
 
         Show show1 = createShow(hall1, play1, date1);
         Show show2 = createShow(hall2, play2, date1);
+        Show show3 = createShow(hall3, play1, date2);
+        Show show4 = createShow(hall3, play2, date3);
+        Show show5 = createShow(hall3, play3, date1.plusDays(1));
 
 
         Ticket ticket1 = createTicket(LocalDateTime.now().plusMinutes(15), 105, show1, client1);
-        Ticket ticket3 = createTicket(LocalDateTime.now().plusMinutes(20), 1, show2, client1);
+        Ticket ticket2 = createTicket(LocalDateTime.now().plusMinutes(10), 100, show1, client2);
+        Ticket ticket3 = createTicket(LocalDateTime.now().plusMinutes(5), 99, show3, client1);
+        Ticket ticket4 = createTicket(LocalDateTime.now().plusMinutes(12), 97, show2, client1);
+        Ticket ticket5 = createTicket(LocalDateTime.now().plusMinutes(16), 24, show2, client2);
 
         log.info("-");
         log.info("-");
@@ -70,7 +113,7 @@ class Oro2ApplicationTests {
         Page<Show> hall3shows = showRepo.findByHallId(hall3.getId(), pageable);
 
         BiConsumer<Integer, Page<Show>> logHallShows = (number, shows) -> {
-            log.info("Lista shows dla hall {}:", number);
+            log.info("Shows dla sali o numerze {}:", number);
             hall1shows.forEach(s -> log.info("Przedstawienie: {}, Data: {}", s.getPlay().getName(), s.getDate()));
         };
 
@@ -87,7 +130,7 @@ class Oro2ApplicationTests {
         Page<Show> play3shows = showRepo.findByPlayId(play3.getId(), pageable);
 
         BiConsumer<Long, Page<Show>> logIdShows = (id, shows) -> {
-            log.info("Przedstawienia dla id(show) = {}:", id);
+            log.info("Przedstawienia dla sztuki o id = {}:", id);
             shows.forEach(show -> log.info("Sala: {}, Data: {}", show.getHall().getNumber(), show.getDate()));
         };
 
@@ -104,7 +147,7 @@ class Oro2ApplicationTests {
         play3shows = showRepo.findByPlayName(play3.getName(), pageable);
 
         BiConsumer<String, Page<Show>> logNameShows = (name, shows) -> {
-            log.info("Przedstawienia dla {}:", name);
+            log.info("Shows dla sztuki o nazwie {}:", name);
             shows.forEach(show -> log.info("Sala: {}, Data: {}", show.getHall().getNumber(), show.getDate()));
         };
 
@@ -118,7 +161,7 @@ class Oro2ApplicationTests {
 
         Page<Client> showsClients = ticketRepo.findClientsByShowId(show1.getId(), pageable);
 
-        log.info("Klientci dla przedstawienia id = {}", show1.getId());
+        log.info("Klienci dla show o id = {}", show1.getId());
         showsClients.forEach(client -> log.info("{} {}", client.getFirstName(), client.getLastName()));
 
         log.info("-");
@@ -129,7 +172,7 @@ class Oro2ApplicationTests {
         Page<Show> client2Shows = ticketRepo.findShowsByClientId(client2.getId(), pageable);
 
         BiConsumer<Long, Page<Show>> logClientShows = (clientId, shows) -> {
-            log.info("Przedstawienia klienta (id) = {}", clientId);
+            log.info("Shows klienta (id) = {}", clientId);
             shows.forEach(show ->
                     log.info("Nazwa: {} Data: {}", show.getPlay().getName(), show.getDate())
             );
@@ -142,12 +185,11 @@ class Oro2ApplicationTests {
         log.info("-");
         log.info("-");
 
-
         client1Shows = ticketRepo.findShowsByClientLogin(client1.getLogin(), pageable);
         client2Shows = ticketRepo.findShowsByClientLogin(client2.getLogin(), pageable);
 
         BiConsumer<String, Page<Show>> logClientLoginShows = (clientLogin, shows) -> {
-            log.info("Przedstawienia klienta (login) = {}", clientLogin);
+            log.info("Shows klienta (login) = {}", clientLogin);
             shows.forEach(show ->
                     log.info("Nazwa: {} Data: {}", show.getPlay().getName(), show.getDate())
             );
@@ -160,40 +202,48 @@ class Oro2ApplicationTests {
         log.info("-");
         log.info("-");
 
-
         int hall1Place = ticketRepo.countOccupiedPlacesByHallNumberDate(hall1.getNumber(), date1);
         int hall2Place = ticketRepo.countOccupiedPlacesByHallNumberDate(hall2.getNumber(), date2);
 
-        log.info("Zajęte w {} o {}: {}", hall1.getNumber(), date1, hall1Place);
-        log.info("Zajęte w {} o {}: {}", hall2.getNumber(), date2, hall2Place);
+        log.info("Zajęte miejsca w {}(numer sali) o {}: {}", hall1.getNumber(), date1, hall1Place);
+        log.info("Zajęte miejsca w {}(numer sali) o {}: {}", hall2.getNumber(), date2, hall2Place);
 
         log.info("-");
         log.info("-");
         log.info("-");
-
 
         int Play1Halls = showRepo.countHallsByPlayId(play1.getId());
         int Play2Halls = showRepo.countHallsByPlayId(play2.getId());
         int Play3Halls = showRepo.countHallsByPlayId(play3.getId());
 
-        log.info("Sale numer sztuki id = {}: {}", play1.getId(), Play1Halls);
-        log.info("Sale numer sztuki id = {}: {}", play2.getId(), Play2Halls);
-        log.info("Sale numer sztuki id =  {}: {}", play3.getId(), Play3Halls);
+        log.info("Sale numer sztuki o id = {}: {}", play1.getId(), Play1Halls);
+        log.info("Sale numer sztuki o id = {}: {}", play2.getId(), Play2Halls);
+        log.info("Sale numer sztuki o id =  {}: {}", play3.getId(), Play3Halls);
 
         log.info("-");
         log.info("-");
         log.info("-");
 
-        ticket1.setType(ReservationType.ACCEPTED);
-        ticket3.setType(ReservationType.ACCEPTED);
-        ticket3.setType(ReservationType.ACCEPTED);
+        ticket1.setType(acceptedType);
+        ticketRepo.save(ticket1);
 
+        ticket2.setType(expiredType);
+        ticketRepo.save(ticket2);
+
+        ticket3.setType(acceptedType);
+        ticketRepo.save(ticket3);
+
+        ticket3.setType(acceptedType);
+        ticketRepo.save(ticket4);
+
+        ticket3.setType(acceptedType);
+        ticketRepo.save(ticket5);
 
         int client1Tickets = ticketRepo.countTicketsByClientDateBetween(date1, date3, client1.getId());
         int client2Tickets = ticketRepo.countTicketsByClientDateBetween(date1, date3, client2.getId());
 
-        log.info("Liczba biletów w przedziale  ({} - {}) klienta id = {}: {}", date1, date3, client1.getId(), client1Tickets);
-        log.info("Liczba biletów w przedziale ({} - {}) klienta id = {}: {}", date1, date3, client2.getId(), client2Tickets);
+        log.info("Liczba biletów w przedziale  ({} - {}) klienta o id = {}: {}", date1, date3, client1.getId(), client1Tickets);
+        log.info("Liczba biletów w przedziale ({} - {}) klienta o id = {}: {}", date1, date3, client2.getId(), client2Tickets);
 
         log.info("-");
         log.info("-");
@@ -204,23 +254,25 @@ class Oro2ApplicationTests {
         log.info("-");
     }
 
-    private Hall createHall(int number, int places){
+    private Hall createHall(int number, int places) {
         return hallRepo.save(new Hall(null, number, places));
     }
 
-    private Play createPlay(String name){
+    private Play createPlay(String name) {
         return playRepo.save(new Play(null, name));
     }
 
-    private Client createClient(String firstName, String lastName, String email, String login){
+    private Client createClient(String firstName, String lastName, String email, String login) {
         return clientRepo.save(new Client(null, firstName, lastName, email, login, null));
     }
 
-    private Show createShow(Hall hall, Play play, LocalDateTime date){
+    private Show createShow(Hall hall, Play play, LocalDateTime date) {
         return showRepo.save(new Show(null, hall, play, date));
     }
 
-    private Ticket createTicket(LocalDateTime expireDate, long place, Show show, Client client){
-        return ticketRepo.save(new Ticket(null, expireDate, ReservationType.PENDING, TicketType.NORMAL,place, client, show));
+    private Ticket createTicket(LocalDateTime expireDate, long place, Show show, Client client) {
+        return ticketRepo.save(new Ticket(null, expireDate, pendingType, normalType, place, client, show));
     }
+
+
 }
