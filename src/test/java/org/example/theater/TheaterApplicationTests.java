@@ -79,8 +79,8 @@ class Oro2ApplicationTests {
         Hall hall2 = createHall(2, 15);
         Hall hall3 = createHall(3, 20);
 
-        Client client1 = createClient("Jan", "Nowak", "jannowak@gmail.com", "jannowak");
-        Client client2 = createClient("Andrzej", "Kowalski", "andrzejkowalski@wp.pl", "andrzejkowalski");
+        Client client1 = createClient("Jan", "Nowak", "jannowak@gmail.com", "jannowak", "admin");
+        Client client2 = createClient("Andrzej", "Kowalski", "andrzejkowalski@wp.pl", "andrzejkowalski", "qwerty");
 
         Play play1 = createPlay("Sztuka numero 1");
         Play play2 = createPlay("Coś innego");
@@ -262,8 +262,8 @@ class Oro2ApplicationTests {
         return playRepo.save(new Play(null, name));
     }
 
-    private Client createClient(String firstName, String lastName, String email, String login) {
-        return clientRepo.save(new Client(null, firstName, lastName, email, login, null));
+    private Client createClient(String firstName, String lastName, String email, String login, String password) {
+        return clientRepo.save(new Client(null, firstName, lastName, email, login, password));
     }
 
     private Show createShow(Hall hall, Play play, LocalDateTime date) {
