@@ -75,20 +75,20 @@ class Oro2ApplicationTests {
     @Test
     @Transactional
     void contextLoads() {
-        Hall hall1 = createHall(1, 14);
-        Hall hall2 = createHall(2, 15);
-        Hall hall3 = createHall(3, 20);
+        Hall hall1 = createHall(1, 100);
+        Hall hall2 = createHall(2, 150);
+        Hall hall3 = createHall(3, 200);
 
         Client client1 = createClient("Jan", "Nowak", "jannowak@gmail.com", "jannowak", "admin");
         Client client2 = createClient("Andrzej", "Kowalski", "andrzejkowalski@wp.pl", "andrzejkowalski", "qwerty");
 
         Play play1 = createPlay("Sztuka numero 1");
-        Play play2 = createPlay("Coś innego");
+        Play play2 = createPlay("Coś innego 2");
         Play play3 = createPlay("Nazwa 3 sztuki");
 
-        LocalDateTime date1 = LocalDateTime.of(2020, 1, 25, 20, 15);
-        LocalDateTime date2 = LocalDateTime.of(2020, 2, 26, 21, 30);
-        LocalDateTime date3 = LocalDateTime.of(2020, 3, 27, 22, 45);
+        LocalDateTime date1 = LocalDateTime.of(2025,1, 1, 1, 11);
+        LocalDateTime date2 = LocalDateTime.of(2025, 2, 2, 2, 22);
+        LocalDateTime date3 = LocalDateTime.of(2029, 3, 3, 3, 33);
 
         Show show1 = createShow(hall1, play1, date1);
         Show show2 = createShow(hall2, play2, date1);
@@ -98,32 +98,29 @@ class Oro2ApplicationTests {
 
 
         Ticket ticket1 = createTicket(LocalDateTime.now().plusMinutes(15), 105, show1, client1);
-        Ticket ticket2 = createTicket(LocalDateTime.now().plusMinutes(10), 100, show1, client2);
+        Ticket ticket2 = createTicket(LocalDateTime.now().plusMinutes(15), 100, show1, client2);
         Ticket ticket3 = createTicket(LocalDateTime.now().plusMinutes(5), 99, show3, client1);
         Ticket ticket4 = createTicket(LocalDateTime.now().plusMinutes(12), 97, show2, client1);
-        Ticket ticket5 = createTicket(LocalDateTime.now().plusMinutes(16), 24, show2, client2);
+        Ticket ticket5 = createTicket(LocalDateTime.now().plusMinutes(5), 24, show2, client2);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
 
-        Pageable pageable = PageRequest.of(0, 10);
+
+        Pageable pageable = PageRequest.of(0, 5);
         Page<Show> hall1shows = showRepo.findByHallId(hall1.getId(), pageable);
         Page<Show> hall2shows = showRepo.findByHallId(hall2.getId(), pageable);
         Page<Show> hall3shows = showRepo.findByHallId(hall3.getId(), pageable);
 
         BiConsumer<Integer, Page<Show>> logHallShows = (number, shows) -> {
             log.info("Shows dla sali o numerze {}:", number);
-            hall1shows.forEach(s -> log.info("Przedstawienie: {}, Data: {}", s.getPlay().getName(), s.getDate()));
+            shows.forEach(s -> log.info("Przedstawienie: {}, Data: {}", s.getPlay().getName(), s.getDate()));
         };
-
         logHallShows.accept(hall1.getNumber(), hall1shows);
         logHallShows.accept(hall2.getNumber(), hall2shows);
         logHallShows.accept(hall3.getNumber(), hall3shows);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         Page<Show> play1shows = showRepo.findByPlayId(play1.getId(), pageable);
         Page<Show> play2shows = showRepo.findByPlayId(play2.getId(), pageable);
@@ -138,9 +135,8 @@ class Oro2ApplicationTests {
         logIdShows.accept(play2.getId(), play2shows);
         logIdShows.accept(play3.getId(), play3shows);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         play1shows = showRepo.findByPlayName(play1.getName(), pageable);
         play2shows = showRepo.findByPlayName(play2.getName(), pageable);
@@ -155,18 +151,14 @@ class Oro2ApplicationTests {
         logNameShows.accept(play2.getName(), play2shows);
         logNameShows.accept(play3.getName(), play3shows);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
 
         Page<Client> showsClients = ticketRepo.findClientsByShowId(show1.getId(), pageable);
 
         log.info("Klienci dla show o id = {}", show1.getId());
         showsClients.forEach(client -> log.info("{} {}", client.getFirstName(), client.getLastName()));
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
 
         Page<Show> client1Shows = ticketRepo.findShowsByClientId(client1.getId(), pageable);
         Page<Show> client2Shows = ticketRepo.findShowsByClientId(client2.getId(), pageable);
@@ -181,9 +173,8 @@ class Oro2ApplicationTests {
         logClientShows.accept(client1.getId(), client1Shows);
         logClientShows.accept(client2.getId(), client2Shows);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         client1Shows = ticketRepo.findShowsByClientLogin(client1.getLogin(), pageable);
         client2Shows = ticketRepo.findShowsByClientLogin(client2.getLogin(), pageable);
@@ -198,9 +189,8 @@ class Oro2ApplicationTests {
         logClientLoginShows.accept(client1.getLogin(), client1Shows);
         logClientLoginShows.accept(client2.getLogin(), client2Shows);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         int hall1Place = ticketRepo.countOccupiedPlacesByHallNumberDate(hall1.getNumber(), date1);
         int hall2Place = ticketRepo.countOccupiedPlacesByHallNumberDate(hall2.getNumber(), date2);
@@ -208,9 +198,8 @@ class Oro2ApplicationTests {
         log.info("Zajęte miejsca w {}(numer sali) o {}: {}", hall1.getNumber(), date1, hall1Place);
         log.info("Zajęte miejsca w {}(numer sali) o {}: {}", hall2.getNumber(), date2, hall2Place);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         int Play1Halls = showRepo.countHallsByPlayId(play1.getId());
         int Play2Halls = showRepo.countHallsByPlayId(play2.getId());
@@ -220,9 +209,8 @@ class Oro2ApplicationTests {
         log.info("Sale numer sztuki o id = {}: {}", play2.getId(), Play2Halls);
         log.info("Sale numer sztuki o id =  {}: {}", play3.getId(), Play3Halls);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
 
         ticket1.setType(acceptedType);
         ticketRepo.save(ticket1);
@@ -245,13 +233,10 @@ class Oro2ApplicationTests {
         log.info("Liczba biletów w przedziale  ({} - {}) klienta o id = {}: {}", date1, date3, client1.getId(), client1Tickets);
         log.info("Liczba biletów w przedziale ({} - {}) klienta o id = {}: {}", date1, date3, client2.getId(), client2Tickets);
 
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
         log.info("END");
-        log.info("-");
-        log.info("-");
-        log.info("-");
+        log.info("---");
+
     }
 
     private Hall createHall(int number, int places) {

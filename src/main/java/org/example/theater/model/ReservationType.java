@@ -22,7 +22,6 @@ public class ReservationType {
 
     private String name;
 
-    // Method to get reservation type by name for easier usage
     public static ReservationType getPendingType() {
         return new ReservationType(1L, PENDING);
     }
